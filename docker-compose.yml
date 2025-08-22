@@ -1,0 +1,58 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15.3-alpine3.18
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  prisma-studio:
+    build:
+      context: ${BACKEND_CONTEXT}
+    command: npx prisma studio --port 5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:@postgres:5432/postgres?schema=public&connect_timeout=3000
+
+  backend:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: ${BACKEND_CONTEXT}
+      target: dev
+    volumes:
+      - ./${BACKEND_CONTEXT}/src:/app/src
+      - ./${BACKEND_CONTEXT}/prisma:/app/prisma
+    command: "npm run dev"
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT="8080"
+      - DATABASE_URL=postgresql://postgres:@postgres:5432/postgres?schema=public&connect_timeout=3000
+      - JWT_SECRET=82BE286AE0014A5E7476F17C3E37A06FE366CDC8EDA3E66BFF7265F9320AA294
+
+  #frontend:
+  #  build:
+  #    context: client
+  #    target: dev
+  #  volumes:
+  #    - ./client/src:/app/src
+  #  command: "npm run dev"
+  #  ports:
+  #    - "3000:3000"
+  #  environment:
+  #    - PORT="3000"
+  #    - VITE_API_URL=http://localhost:8080

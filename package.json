@@ -1,0 +1,33 @@
+{
+  "name": "react-node-ts-monorepo",
+  "version": "1.0.0",
+  "description": "monorepo with react and nodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test --workspace=client && npm test --workspace=server",
+    "test:coverage": "npm test --workspace=client -- --coverage && npm test --workspace=server -- --coverage",
+    "test:client": "npm test --workspace=client",
+    "test:server": "npm test --workspace=server",
+    "prisma:populate": "npm run prisma:populate --workspace=server",
+    "compose:up": "BUILDKIT_PROGRESS=plain docker compose --env-file .env up --build --force-recreate --renew-anon-volumes --remove-orphans"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Grimowsky/react-node-ts-monorepo.git"
+  },
+  "keywords": [
+    "monorepo",
+    "react",
+    "node",
+    "vite",
+    "typescript",
+    "ts",
+    "boilerplate"
+  ],
+  "author": "Grimm",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Grimowsky/react-node-ts-monorepo/issues"
+  },
+  "homepage": "https://github.com/Grimowsky/react-node-ts-monorepo#readme"
+}

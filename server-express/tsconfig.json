@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ESNext",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "lib": ["ESNext", "dom"],
+    "outDir": "lib",
+    "rootDir": ".",
+    "removeComments": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./src",
+    "types": ["@types/jest"],
+    "paths": {
+      "@controllers/*": ["./api/rest/v1/Controllers/*"],
+      "@routes/*": ["./api/rest/v1/Routes/*"],
+      "@repository/*": ["./repository/*"],
+      "@services/*": ["./services/*"]
+    }
+  },
+  "ts-node": {
+    "esm": true,
+    "require": ["tsconfig-paths/register"]
+  },
+  "exclude": ["node_modules", ".idea", "lib", "coverage"],
+  "include": ["src", "./src", "prisma"]
+}
