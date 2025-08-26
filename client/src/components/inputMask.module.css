@@ -1,0 +1,29 @@
+.usaInputMask {
+    display: block;
+    position: relative;
+}
+
+.usaInputMaskContent{
+    border: 1px solid transparent;
+    color: gray;
+    display: block;
+    left: 2px;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+
+    i {
+        visibility: hidden;
+
+        @media (forced-colors: active) {
+            color: black;;
+            font-style: normal;
+            visibility: visible;
+        }
+    }
+
+    @media (forced-colors: active) {
+        border: none;
+    }
+}
+
