@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import React, { useState } from 'react';
 import { routes } from './routes.schema';
 import { Route, Routes } from 'react-router-dom';
 import { useIMask } from 'react-imask';
@@ -13,25 +13,24 @@ function MaskedInput(props: React.ComponentProps<'input'>) {
   const [opts] = useState({
     mask: MASK,
     lazy: false,
-    placeholderChar: '_',
-    defaultValue: props.defaultValue || '',
+    defaultValue: props.defaultValue,
   });
-  const { ref, maskRef } = useIMask(opts, {
+  const { ref, maskRef, typedValue } = useIMask(opts, {
     onAccept: (_val: string, { unmaskedValue }) => {
       props.onChange?.({ target: { value: unmaskedValue } } as any);
     },
   });
 
-  function getCurrentValue() {
-    if (!ref || !ref.current) return '';
-    if (props.defaultValue) return props.defaultValue;
+  React.useEffect(() => {
+    if (ref.current) {
+      let refVal = ref.current.value;
+      ref.current.value = refVal.split('_')[0];
+    }
+  }, [ref?.current?.value]);
 
-    return ref.current.value.split('_')[0];
-  }
+  console.log('render', typedValue);
 
-  const val = getCurrentValue();
-
-  console.log('@@@', maskRef.current);
+  const preventMaskRead = !(typedValue && typedValue.length > 0);
 
   return (
     <MaskShell>
@@ -45,15 +44,13 @@ function MaskedInput(props: React.ComponentProps<'input'>) {
           width: '200px',
           fontFamily: 'Roboto, sans-serif',
         }}
-        aria-hidden={val.length === 0}
-        value={getCurrentValue()}
       />
     </MaskShell>
   );
 }
 
 export const AppRoutes = (): React.ReactElement => {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState('1234');
 
   return (
     <Routes>
