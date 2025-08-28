@@ -1,64 +1,116 @@
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { routes } from './routes.schema';
 import { Route, Routes } from 'react-router-dom';
-import { useIMask } from 'react-imask';
-import {
-  MaskContent,
-  MaskShell,
-} from '../components/shell-mask/mask-shell.tsx';
+import { formatInputValue } from '../input-formatter/general';
+import { FormatInputValueOptions } from '../input-formatter/general/types.ts';
+import { createStatelessContext } from '../createStatelessContext.tsx';
 
-const MASK = '000-000-000';
+type MaskRootProps = {
+  formatterOpts: FormatInputValueOptions;
+  inputProps?: React.ComponentProps<'input'>;
+};
 
-function MaskedInput(props: React.ComponentProps<'input'>) {
-  const [opts] = useState({
-    mask: MASK,
-    lazy: false,
-    defaultValue: props.defaultValue,
-  });
-  const { ref, maskRef, typedValue } = useIMask(opts, {
-    onAccept: (_val: string, { unmaskedValue }) => {
-      props.onChange?.({ target: { value: unmaskedValue } } as any);
-    },
-  });
+type InputProps = React.ComponentProps<'input'>;
 
-  React.useEffect(() => {
-    if (ref.current) {
-      let refVal = ref.current.value;
-      ref.current.value = refVal.split('_')[0];
+const [useInputMaskContext, InputMaskContextProvider] = createStatelessContext<
+  MaskRootProps & {
+    formattedValue: string;
+    setFormattedValue: Dispatch<SetStateAction<string>>;
+  }
+>();
+
+function MaskRoot(props: React.PropsWithChildren<MaskRootProps>) {
+  const [formattedValue, setFormattedValue] = useState('');
+  return (
+    <InputMaskContextProvider
+      value={{ ...props, formattedValue, setFormattedValue }}
+    >
+      {props.children}
+    </InputMaskContextProvider>
+  );
+}
+
+function FormatControl(props: React.PropsWithChildren<{}>) {
+  const { formatterOpts, inputProps, setFormattedValue } =
+    useInputMaskContext();
+  const { children } = props;
+
+  const val = inputProps?.defaultValue || inputProps?.value || '';
+
+  const [value, setValue] = useState(
+    formatInputValue(val.toString(), formatterOpts).result,
+  );
+
+  const extendedChildren = React.Children.map(children, (child) => {
+    if (React.isValidElement(child) && child.type === 'input') {
+      return React.cloneElement(child, {
+        ...inputProps,
+        value,
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+          const { result } = formatInputValue(e.target.value, formatterOpts);
+          setValue(result);
+          setFormattedValue(result);
+        },
+      } as InputProps);
     }
-  }, [ref?.current?.value]);
+    return child;
+  });
 
-  console.log('render', typedValue);
+  return extendedChildren;
+}
 
-  const preventMaskRead = !(typedValue && typedValue.length > 0);
+function MaskShell(p: React.PropsWithChildren<{}>) {
+  const { formattedValue, formatterOpts } = useInputMaskContext();
+  const { mask } = formatterOpts;
+  const { children } = p;
+
+  const placeHoolder =
+    formattedValue + mask.substring(formattedValue.length).replace(/0/g, '_');
 
   return (
-    <MaskShell>
-      <MaskContent maskPlaceholder={maskRef?.current?.value} />
-      <input
-        {...props}
-        ref={ref as React.Ref<HTMLInputElement>}
+    <span style={{ position: 'relative' }}>
+      <span
         style={{
-          fontSize: '24px',
-          padding: '8px 16px',
-          width: '200px',
-          fontFamily: 'Roboto, sans-serif',
+          position: 'absolute',
+          top: -4,
+          left: 8,
+          fontSize: '18px',
         }}
-      />
-    </MaskShell>
+      >
+        {placeHoolder}
+      </span>
+      {children}
+    </span>
   );
 }
 
 export const AppRoutes = (): React.ReactElement => {
-  const [value, setValue] = useState('1234');
-
   return (
     <Routes>
       <Route
         path={routes.BASE_ROUTE}
         element={
           <div style={{ padding: '48px' }}>
-            <MaskedInput onChange={(v) => setValue(v.target.value)} />
+            <h1>Input Formatter Demo</h1>
+            <MaskRoot
+              formatterOpts={{
+                mask: '000-000-000',
+                delimiter: '-',
+              }}
+            >
+              <MaskShell>
+                <FormatControl>
+                  <input
+                    style={{
+                      fontSize: '18px',
+                      padding: '8px',
+                      width: '200px',
+                      color: 'transparent',
+                    }}
+                  />
+                </FormatControl>
+              </MaskShell>
+            </MaskRoot>
           </div>
         }
       />
